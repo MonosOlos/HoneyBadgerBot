@@ -57,7 +57,7 @@ def add_match(cfg, match_details, token=None):
     auth_url = cfg["BASE_URL"] + cfg["AUTH"]
     match_list_url = cfg["BASE_URL"] + cfg["MATCH_LIST_REST"]
 
-    r_details = requests.post(match_list_url, 
+    post_response = requests.post(match_list_url, 
         headers={
             "Referer": login_url, 
             "Authorization": "Token " + token["token"]
@@ -65,7 +65,7 @@ def add_match(cfg, match_details, token=None):
         verify=False, 
         data=match_details)
 
-    return r_details.json() #{'pk': INT, 'players': , 'winner':, 'date_played': , 'last_modified': , 'tournament': None, 'map': 14}
+    return post_response.json() #{'pk': INT, 'players': , 'winner':, 'date_played': , 'last_modified': , 'tournament': None, 'map': 14}
 
 def update_result(cfg, match_pk, winner_pk, token=None):
 
@@ -77,7 +77,7 @@ def update_result(cfg, match_pk, winner_pk, token=None):
     match_details = requests.get(match_update_url, verify=False).json()
     match_details["winner"] = winner_pk
 
-    put_response = requests.patch(
+    patch_response = requests.patch(
         match_update_url,
         data = match_details["winner"], #TODO: Try using winner_pk in dict
         headers = {
@@ -85,6 +85,8 @@ def update_result(cfg, match_pk, winner_pk, token=None):
             "Authorization": "Token " + token["token"]
         }, 
         verify=False)
+    
+    return patch_response.json()
 
 def get_player_key(cfg, discord_id):
     url = cfg["BASE_URL"] + cfg["DISCORD_LOOKUP_REST"] + str(discord_id) + "/"
