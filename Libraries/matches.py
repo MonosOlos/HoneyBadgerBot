@@ -19,7 +19,7 @@ def make_match(cfg, player1_pk, player2_pk, map_pk = None, token=None):
                 break
         #filter(lambda x: x["pk"] == map_pk, map_list) #TODO: Test
     else:
-        chosen_map = random.choice(get_maps(cfg))
+        chosen_map = random.choice(get_maps(cfg)) # TODO: Hi
 
     match_details = {
         "players" : [player1_pk, player2_pk],
