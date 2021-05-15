@@ -70,9 +70,9 @@ async def challenge(ctx):
     recipient_nick = ctx.message.mentions[0].display_name
     recipient_mention = ctx.message.mentions[0].mention
 
-    # if challenger_id == recipient_id:
-    #     await ctx.send("You can't challenge yourself! Usage:\n**!challenge @username**")
-    #     return
+    if challenger_id == recipient_id:
+        await ctx.send("You can't challenge yourself! Usage:\n**!challenge @username**")
+        return
 
     challenger_pk = get_player_key(cfg, challenger_id)
     recipient_pk = get_player_key(cfg, recipient_id)
@@ -89,7 +89,7 @@ async def challenge(ctx):
         await ctx.send(f"""
         Could not find recipient on the system. {reporter} please fix.
         {recipient_nick} 
-        ID: {recipient_id}, PK: {recipient_pk}
+        ID: {recipient_id}
         """)
         return
 
