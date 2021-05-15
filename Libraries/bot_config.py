@@ -15,6 +15,7 @@ def get_config():
     "AUTH" : "api-token-auth/",
         # Rest
     "MAP_LIST_REST" : "rest/map_list/",
+    "PLAYER_WIN_PROBABILITY_REST" : "/rest/bot/player_win_probability/",
     "MATCH_LIST_REST" : "rest/match_list/",
     "MATCH_UPDATE_REST" : "rest/match_update/",
     "DISCORD_LOOKUP_REST" : "rest/bot/discord_lookup/" # + Discord ID

@@ -9,6 +9,19 @@ from Libraries.bot_config import get_config
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning) #TODO HOW TO MAKE THIS SECURE?
 
+def get_login_token(cfg, token=None):
+    login_url = cfg["BASE_URL"] + cfg["LOGIN"]
+    auth_url = cfg["BASE_URL"] + "api-token-auth/"
+
+    current_session = requests.session()
+    current_session.get(login_url, verify=False)
+
+    csrf = current_session.cookies['csrftoken']
+
+    resp = current_session.post(auth_url, data={"username": cfg["USERNAME"], "password": cfg["PASSWORD"]}, headers={"Referer": login_url}).json()
+
+    return {"csrf": csrf, "token": resp["token"]}
+
 def make_match(cfg, player1_pk, player2_pk, map_pk = None, token=None):
 
     #TODO: Fetch specific map when API allows this
@@ -32,19 +45,6 @@ def make_match(cfg, player1_pk, player2_pk, map_pk = None, token=None):
     }
 
     return match_details
-
-def get_login_token(cfg, token=None):
-    login_url = cfg["BASE_URL"] + cfg["LOGIN"]
-    auth_url = cfg["BASE_URL"] + "api-token-auth/"
-
-    current_session = requests.session()
-    current_session.get(login_url, verify=False)
-
-    csrf = current_session.cookies['csrftoken']
-
-    resp = current_session.post(auth_url, data={"username": cfg["USERNAME"], "password": cfg["PASSWORD"]}, headers={"Referer": login_url}).json()
-
-    return {"csrf": csrf, "token": resp["token"]}
 
 def add_match(cfg, match_details, token=None):
 
@@ -105,6 +105,26 @@ def delete_match(cfg, match_pk, token=None):
         verify=False)
 
     return delete_response.status_code
+
+def get_matchup_rate(cfg, player1_pk, player2_pk, token=None):
+
+    if token is None:
+        token = get_login_token(cfg)
+
+    win_probability_url = f'{cfg["BASE_URL"]}{cfg["PLAYER_WIN_PROBABILITY_REST"]}{player1_pk}/{player2_pk}'
+    print(win_probability_url)
+
+    win_probability_response = requests.get(
+        win_probability_url,
+        headers = {
+            "Referer": cfg["BASE_URL"],
+            "Authorization": "Token " + token["token"]
+        }, 
+        verify=False
+    )
+    
+    return win_probability_response
+
 
 def get_player_key(cfg, discord_id):
     url = cfg["BASE_URL"] + cfg["DISCORD_LOOKUP_REST"] + str(discord_id) + "/"

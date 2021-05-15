@@ -62,7 +62,6 @@ async def challenge(ctx):
         await ctx.send("Invalid Challenge. Usage:\n**?challenge @username**")
         return
 
-    print(content.split())
     challenger_id = ctx.message.author.id
     challenger_nick = ctx.message.author.display_name
     challenger_mention = ctx.message.author.mention
@@ -82,9 +81,9 @@ async def challenge(ctx):
         f"""
 **{challenger_nick} is challenging {recipient_nick}!**
 --- {recipient_nick} react with ---
-👍 to **accept** the challenge
-🚫 to **decline** the challenge"""
-        )
+👍 to **accept**
+🚫 to **decline**
+    """)
 
     if recipient_pk == False:
         await ctx.send(f"""
@@ -120,9 +119,12 @@ async def challenge(ctx):
     match_response = add_match(cfg, match_details) # Adds the match to the system
     match_pk = match_response["pk"]
 
+    matchup_rate_p1 = round(get_matchup_rate(cfg, challenger_pk, recipient_pk).json()["expected_score_challenger"] * 100)
+    matchup_rate_p2 = (100 - matchup_rate_p1)
+
     match_message = await ctx.send(f"""
 **MATCH CREATED:** 
-{challenger_mention} vs {recipient_mention} on {match_details['map_name']}
+{challenger_mention} [{matchup_rate_p1}%] vs {recipient_mention} [{matchup_rate_p2}%] on {match_details['map_name']}
 --- React to this message with ---
 1️⃣ if **{challenger_nick}** won
 2️⃣ if **{recipient_nick}** won
