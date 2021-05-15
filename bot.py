@@ -168,7 +168,7 @@ async def challenge(ctx):
         return
 
     if str(update) == "202":
-        await ctx.send(f"Match between {challenger_nick} and {recipient_nick} has been updated. {winner_nick} has won.")
+        await ctx.send(f"Match between {challenger_nick} and {recipient_nick} has been updated. {winner_name} has won.")
         return
     else:
         await ctx.send(f"**Error updating the match.** Tell {reporter} to fix this.")
