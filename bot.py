@@ -13,11 +13,6 @@ cfg = get_config()
 bot = commands.Bot(command_prefix='?')
 reporter = "<@!507367765884272641>" # MCauthon
 
-unicode_emojis = {
-    "thumbs_up" : '\N{THUMBS UP SIGN}',
-    "thumbs_down" : '\N{THUMBS DOWN SIGN}',
-    "cancel" : '\N{CANCEL CHARACTER}'
-}
 
 @bot.event
 async def on_ready():
@@ -63,10 +58,11 @@ async def mapdetails(ctx):
 @bot.command(help="Sends a challenge. If accepted, creates a match tracked on https://www.honeybadgersc2mod.com/")
 async def challenge(ctx):
     content = str(ctx.message.content)
-    if not (len(content.split()) == 2 and "<@!" in content):
-        await ctx.send("Invalid Challenge. Usage:\n**!challenge @username**")
+    if not (len(content.split()) == 2 and "<@" in content):
+        await ctx.send("Invalid Challenge. Usage:\n**?challenge @username**")
         return
 
+    print(content.split())
     challenger_id = ctx.message.author.id
     challenger_nick = ctx.message.author.display_name
     challenger_mention = ctx.message.author.mention
@@ -85,13 +81,17 @@ async def challenge(ctx):
     challenge_message = await ctx.send(
         f"""
 **{challenger_nick} is challenging {recipient_nick}!**
-{recipient_nick} react with 
-👍 to accept the challenge
-🚫 to decline the challenge"""
+--- {recipient_nick} react with ---
+👍 to **accept** the challenge
+🚫 to **decline** the challenge"""
         )
 
     if recipient_pk == False:
-        await ctx.send(f"Could not find recipient on the system. {reporter} please fix.")
+        await ctx.send(f"""
+        Could not find recipient on the system. {reporter} please fix.
+        {recipient_nick} 
+        ID: {recipient_id}, PK: {recipient_pk}
+        """)
         return
 
     # Check for response
@@ -123,10 +123,10 @@ async def challenge(ctx):
     match_message = await ctx.send(f"""
 **MATCH CREATED:** 
 {challenger_mention} vs {recipient_mention} on {match_details['map_name']}
-React to this message with:
-1️⃣ if {challenger_nick} won
-2️⃣ if {recipient_nick} won! 
-🚫 to cancel.
+--- React to this message with ---
+1️⃣ if **{challenger_nick}** won
+2️⃣ if **{recipient_nick}** won
+🚫 to cancel the match.
     """)
 
     def check_match_winner(reaction, user):
@@ -155,13 +155,19 @@ React to this message with:
     elif str(emoji_reaction) == "🚫": # Cancel
         update = False
 
-    if update == False:
-        await ctx.send(f"Match between {challenger_nick} and {recipient_nick} on {match_details['map_name']} has been cancelled.")
+    # DELETE THE MATCH
+    if update == False: 
+        update = delete_match(cfg, match_pk)
+        if str(update) == "202":
+            await ctx.send(f"Match between {challenger_nick} and {recipient_nick} on {match_details['map_name']} has been cancelled.")
+            return
+        else:
+            await ctx.send(f"**Error updating the match.** Tell {reporter} to fix this.")
         return
-        # TODO: Implement cancellation code
 
     if str(update) == "202":
         await ctx.send(f"Match between {challenger_nick} and {recipient_nick} has been updated. {winner_nick} has won.")
+        return
     else:
         await ctx.send(f"**Error updating the match.** Tell {reporter} to fix this.")
 

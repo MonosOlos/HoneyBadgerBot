@@ -77,6 +77,7 @@ def update_result(cfg, match_pk, winner_pk, token=None):
     match_details = requests.get(match_update_url, verify=False).json()
     match_details["winner"] = winner_pk
 
+
     patch_response = requests.patch(
         match_update_url,
         data = match_details, #TODO: Try using winner_pk in dict
@@ -87,6 +88,23 @@ def update_result(cfg, match_pk, winner_pk, token=None):
         verify=False)
 
     return patch_response.status_code
+
+def delete_match(cfg, match_pk, token=None):
+
+    if token is None:
+        token = get_login_token(cfg)
+
+    match_update_url = cfg["BASE_URL"] + cfg["MATCH_UPDATE_REST"] + "/" + str(match_pk) + "/"
+
+    delete_response = requests.delete(
+        match_update_url,
+        headers = {
+            "Referer": match_update_url,
+            "Authorization": "Token " + token["token"]
+        }, 
+        verify=False)
+
+    return delete_response.status_code
 
 def get_player_key(cfg, discord_id):
     url = cfg["BASE_URL"] + cfg["DISCORD_LOOKUP_REST"] + str(discord_id) + "/"
