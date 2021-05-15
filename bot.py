@@ -11,6 +11,7 @@ from Libraries.bot_config import get_config
 cfg = get_config()
 
 bot = commands.Bot(command_prefix='?')
+reporter = "<@!507367765884272641>" # MCauthon
 
 @bot.event
 async def on_ready():
@@ -68,11 +69,9 @@ async def challenge(ctx):
     recipient_nick = ctx.message.mentions[0].display_name
     recipient_mention = ctx.message.mentions[0].mention
 
-    '''
     if challenger_id == recipient_id:
         await ctx.send("You can't challenge yourself! Usage:\n**!challenge @username**")
         return
-    '''
 
     challenger_pk = get_player_key(cfg, challenger_id)
     recipient_pk = get_player_key(cfg, recipient_id)
@@ -83,15 +82,12 @@ async def challenge(ctx):
 **Recipient:** ID = {recipient_id}, Tag = {recipient_mention}, PK = {recipient_pk}"""
         )
 
-    '''
     if recipient_pk == False:
-        reporter = "<@!507367765884272641>" # MCauthon
         await ctx.send(f"Could not find recipient on the system. {reporter} please fix.")
         return
-    '''
 
     # Check for response
-    def check(reaction, user): # User is the person who reacted
+    def check_accept_challenge(reaction, user): # User is the person who reacted
         my_check = (
             user.id == recipient_id and 
             str(reaction.emoji) == "👍"
@@ -100,7 +96,7 @@ async def challenge(ctx):
 
     try:
         await challenge_message.add_reaction("👍")
-        reaction = await bot.wait_for("reaction_add", timeout=86400, check = check) # 86400 = 24 hours
+        reaction = await bot.wait_for("reaction_add", timeout=86400, check = check_accept_challenge) # 86400 = 24 hours
 
     except asyncio.TimeoutError:
         await ctx.send(f"Hi {challenger_mention}, you challenged {recipient_mention}, but they chickened out (did not accept in time).")
@@ -119,7 +115,7 @@ React to this message with :one: if {challenger_nick} won, or :two: if {recipien
 React with 🚫 to cancel.
     """)
 
-    def check(reaction, user):
+    def check_match_winner(reaction, user):
         my_check = (
             str(reaction.emoji) == ("1️⃣" or "2️⃣" or "🚫") and 
             user.id in [recipient_id, challenger_id]
@@ -128,7 +124,7 @@ React with 🚫 to cancel.
 
     try:
         await match_message.add_reaction("1️⃣"); await match_message.add_reaction("2️⃣"); await match_message.add_reaction("🚫")
-        reaction = await bot.wait_for("reaction_add", timeout=86400, check = check) # 86400 = 24 hours
+        reaction = await bot.wait_for("reaction_add", timeout=86400, check = check_match_winner) # 86400 = 24 hours
 
     except asyncio.TimeoutError:
         await ctx.send(f"Hi {challenger_mention}, you challenged {recipient_mention}, but they chickened out (did not accept in time).")
@@ -138,8 +134,10 @@ React with 🚫 to cancel.
 
     if str(emoji_reaction) == "1️⃣": # Challenger
         update = update_result(cfg, match_pk, challenger_pk)
+        winner_name = challenger_nick
     elif str(emoji_reaction) == "2️⃣": # Recipient
         update = update_result(cfg, match_pk, recipient_pk)
+        winner_name = recipient_nick
     elif str(emoji_reaction) == "🚫": # Cancel
         update = False
 
@@ -147,11 +145,27 @@ React with 🚫 to cancel.
         await ctx.send(f"Match between {challenger_name} and {recipient_name} has been cancelled.")
         # TODO: Implement cancellation code
 
-    print(update)
+    if update == "202":
+        await ctx.send(f"Match between {challenger_name} and {recipient_name} has been updated. {winner_nick} has won.")
+    else:
+        await ctx.send(f"Error updating the match. Tell {reporter} to fix this.")
+
+bot.run(cfg["DISCORD_TOKEN"])
 
 
+'''
+@bot.command(help="Accepts a challenge. Needs to be a reply to a challenge message.")
+async def accept(ctx):
+    content = str(ctx.message)
+    print(content)
+    
+    msg = await ctx.send("Hello")
+    await msg.add_reaction("\N{THUMBS UP SIGN}") 
 
-
+    #reaction = await bot.wait_for_reaction(emoji="👍", message=msg)
+    #reaction = await bot.wait_for_reaction(['\N{SMILE}', custom_emoji], msg1)
+    #await bot.say("You responded with {}".format(reaction.emoji))
+'''
 
 '''
     @bot.event
@@ -184,20 +198,4 @@ React with 🚫 to cancel.
         #print(f"{guild}\n{user}\n{emoji}\n{reaction}")
         #print(payload.user_id)
         #print(message.author.name)
-'''
-bot.run(cfg["DISCORD_TOKEN"])
-
-
-'''
-@bot.command(help="Accepts a challenge. Needs to be a reply to a challenge message.")
-async def accept(ctx):
-    content = str(ctx.message)
-    print(content)
-    
-    msg = await ctx.send("Hello")
-    await msg.add_reaction("\N{THUMBS UP SIGN}") 
-
-    #reaction = await bot.wait_for_reaction(emoji="👍", message=msg)
-    #reaction = await bot.wait_for_reaction(['\N{SMILE}', custom_emoji], msg1)
-    #await bot.say("You responded with {}".format(reaction.emoji))
 '''

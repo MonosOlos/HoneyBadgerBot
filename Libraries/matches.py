@@ -79,14 +79,14 @@ def update_result(cfg, match_pk, winner_pk, token=None):
 
     patch_response = requests.patch(
         match_update_url,
-        data = match_details["winner"], #TODO: Try using winner_pk in dict
+        data = match_details, #TODO: Try using winner_pk in dict
         headers = {
             "Referer": match_update_url,
             "Authorization": "Token " + token["token"]
         }, 
         verify=False)
-    
-    return patch_response.json()
+
+    return patch_response.status_code
 
 def get_player_key(cfg, discord_id):
     url = cfg["BASE_URL"] + cfg["DISCORD_LOOKUP_REST"] + str(discord_id) + "/"
