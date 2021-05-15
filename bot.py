@@ -69,9 +69,9 @@ async def challenge(ctx):
     recipient_nick = ctx.message.mentions[0].display_name
     recipient_mention = ctx.message.mentions[0].mention
 
-    if challenger_id == recipient_id:
-        await ctx.send("You can't challenge yourself! Usage:\n**!challenge @username**")
-        return
+    # if challenger_id == recipient_id:
+    #     await ctx.send("You can't challenge yourself! Usage:\n**!challenge @username**")
+    #     return
 
     challenger_pk = get_player_key(cfg, challenger_id)
     recipient_pk = get_player_key(cfg, recipient_id)
@@ -92,12 +92,12 @@ async def challenge(ctx):
     def check_accept_challenge(reaction, user): # User is the person who reacted
         my_check = (
             user.id == recipient_id and 
-            str(reaction.emoji) == ("👍" or "👎")
+            str(reaction.emoji) in ["👍", "🚫"]
             )
         return my_check
 
     try:
-        await challenge_message.add_reaction("👍"); await challenge_message.add_reaction("👎")
+        await challenge_message.add_reaction("👍"); await challenge_message.add_reaction("🚫")
         reaction = await bot.wait_for("reaction_add", timeout=86400, check = check_accept_challenge) # 86400 = 24 hours
 
     except asyncio.TimeoutError:
@@ -105,7 +105,8 @@ async def challenge(ctx):
         return
 
     emoji_reaction = reaction[0]
-    if str(emoji_reaction) == "👎":
+    if str(emoji_reaction) == "🚫":
+        await ctx.send("Match declined.")
         return
     # Making the match and checking for winner
 
@@ -115,14 +116,17 @@ async def challenge(ctx):
     match_pk = match_response["pk"]
 
     match_message = await ctx.send(f"""
-**MATCH CREATED:** {challenger_mention} vs {recipient_mention} on {match_details['map_name']}
-React to this message with :one: if {challenger_nick} won, or :two: if {recipient_nick} won! 
-React with 🚫 to cancel.
+**MATCH CREATED:** 
+{challenger_mention} vs {recipient_mention} on {match_details['map_name']}
+React to this message with:
+1️⃣ if {challenger_nick} won
+2️⃣ if {recipient_nick} won! 
+🚫 to cancel.
     """)
 
     def check_match_winner(reaction, user):
         my_check = (
-            str(reaction.emoji) == ("1️⃣" or "2️⃣" or "🚫") and 
+            str(reaction.emoji) in ["1️⃣", "2️⃣", "🚫"] and 
             user.id in [recipient_id, challenger_id]
         )
         return my_check
@@ -146,14 +150,17 @@ React with 🚫 to cancel.
     elif str(emoji_reaction) == "🚫": # Cancel
         update = False
 
+    print(type(update))
+
     if update == False:
-        await ctx.send(f"Match between {challenger_name} and {recipient_name} has been cancelled.")
+        await ctx.send(f"Match between {challenger_nick} and {recipient_nick} on {match_details['map_name']} has been cancelled.")
+        return
         # TODO: Implement cancellation code
 
-    if update == "202":
-        await ctx.send(f"Match between {challenger_name} and {recipient_name} has been updated. {winner_nick} has won.")
+    if str(update) == "202":
+        await ctx.send(f"Match between {challenger_nick} and {recipient_nick} has been updated. {winner_nick} has won.")
     else:
-        await ctx.send(f"Error updating the match. Tell {reporter} to fix this.")
+        await ctx.send(f"**Error updating the match.** Tell {reporter} to fix this.")
 
 bot.run(cfg["DISCORD_TOKEN"])
 
