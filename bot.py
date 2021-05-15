@@ -78,8 +78,10 @@ async def challenge(ctx):
 
     challenge_message = await ctx.send(
         f"""
-**Challenger:** ID = {challenger_id}, Tag = {challenger_mention}, PK = {challenger_pk}
-**Recipient:** ID = {recipient_id}, Tag = {recipient_mention}, PK = {recipient_pk}"""
+**{challenger_mention} is challenging {recipient_mention}!**
+{recipient_nick} react with 
+👍 to accept the challenge
+🚫 to decline the challenge"""
         )
 
     if recipient_pk == False:
@@ -90,18 +92,21 @@ async def challenge(ctx):
     def check_accept_challenge(reaction, user): # User is the person who reacted
         my_check = (
             user.id == recipient_id and 
-            str(reaction.emoji) == "👍"
+            str(reaction.emoji) == ("👍" or "👎")
             )
         return my_check
 
     try:
-        await challenge_message.add_reaction("👍")
+        await challenge_message.add_reaction("👍"); await challenge_message.add_reaction("👎")
         reaction = await bot.wait_for("reaction_add", timeout=86400, check = check_accept_challenge) # 86400 = 24 hours
 
     except asyncio.TimeoutError:
         await ctx.send(f"Hi {challenger_mention}, you challenged {recipient_mention}, but they chickened out (did not accept in time).")
         return
 
+    emoji_reaction = reaction[0]
+    if str(emoji_reaction) == "👎":
+        return
     # Making the match and checking for winner
 
     match_details = make_match(cfg, player1_pk=challenger_pk, player2_pk=recipient_pk) # Returns dict with match details
