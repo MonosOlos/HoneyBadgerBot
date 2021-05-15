@@ -121,16 +121,9 @@ React with 🚫 to cancel.
 
     def check(reaction, user):
         my_check = (
-            user == ctx.message.author and 
             str(reaction.emoji) == ("1️⃣" or "2️⃣" or "🚫") and 
-            ctx.message.author.id == (recipient_id or challenger_id))
-        
-        print(f"""
-        user = {user}
-        message.author = {ctx.message.author}
-        reaction emoji = {reaction.emoji}
-        message.author.id = {ctx.message.author.id}
-        """)
+            user.id in [recipient_id, challenger_id]
+        )
         return my_check
 
     try:
