@@ -53,7 +53,6 @@ async def mapdetails(ctx):
     await ctx.send(map_name)
 
 # Takes a discord tag as input
-# TODO: Hook up to API
 @bot.command(help="Sends a challenge. If accepted, creates a match tracked on https://www.honeybadgersc2mod.com/")
 async def challenge(ctx):
     content = str(ctx.message.content)
@@ -62,9 +61,11 @@ async def challenge(ctx):
         return
 
     challenger_id = ctx.message.author.id
+    challenger_nick = ctx.message.author.display_name
     challenger_mention = ctx.message.author.mention
 
     recipient_id = ctx.message.mentions[0].id
+    recipient_nick = ctx.message.mentions[0].display_name
     recipient_mention = ctx.message.mentions[0].mention
 
     '''
@@ -76,7 +77,7 @@ async def challenge(ctx):
     challenger_pk = get_player_key(cfg, challenger_id)
     recipient_pk = get_player_key(cfg, recipient_id)
 
-    await ctx.send(
+    challenge_message = await ctx.send(
         f"""
 **Challenger:** ID = {challenger_id}, Tag = {challenger_mention}, PK = {challenger_pk}
 **Recipient:** ID = {recipient_id}, Tag = {recipient_mention}, PK = {recipient_pk}"""
@@ -96,18 +97,26 @@ async def challenge(ctx):
         return my_check
 
     try:
-        await bot.add_reaction(ctx.message, "👍")
+        await challenge_message.add_reaction("👍")
         reaction = await bot.wait_for("reaction_add", timeout=86400, check = check) # 86400 = 24 hours
 
     except asyncio.TimeoutError:
         await ctx.send(f"Hi {challenger_mention}, you challenged {recipient_mention}, but they chickened out (did not accept in time).")
         return
-    
-    match_details = make_match(cfg, player1_pk=challenger_pk, player2_pk=recipient_pk)
 
-    add_match(cfg, match_details)
+    # Making the match and checking for winner
 
-    await ctx.send(f"**MATCH CREATED:** {challenger_mention} vs {recipient_mention} on {match_details['map_name']}")
+    match_details = make_match(cfg, player1_pk=challenger_pk, player2_pk=recipient_pk) # Returns dict with match details
+
+    match_response = add_match(cfg, match_details) # Adds the match to the system
+    match_pk = match_response["pk"]
+
+    await ctx.send(f"""
+    **MATCH CREATED:** {challenger_mention} vs {recipient_mention} on {match_details['map_name']}
+    React to this message with :one: if {challenger_nick} won, or :two: if {recipient_nick} won!
+    """)
+
+
 
     return
 

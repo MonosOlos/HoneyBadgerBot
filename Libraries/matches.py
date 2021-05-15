@@ -57,13 +57,15 @@ def add_match(cfg, match_details, token=None):
     auth_url = cfg["BASE_URL"] + cfg["AUTH"]
     match_list_url = cfg["BASE_URL"] + cfg["MATCH_LIST_REST"]
 
-    r = requests.post(match_list_url, 
+    r_details = requests.post(match_list_url, 
         headers={
             "Referer": login_url, 
             "Authorization": "Token " + token["token"]
         }, 
         verify=False, 
         data=match_details)
+
+    return r_details.json() #{'pk': INT, 'players': , 'winner':, 'date_played': , 'last_modified': , 'tournament': None, 'map': 14}
 
 def update_result(cfg, match_pk, winner_pk, token=None):
 
