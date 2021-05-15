@@ -3,6 +3,7 @@ import json
 
 import discord
 from discord.ext import commands
+import asyncio
 
 from Libraries.maps import *
 from Libraries.matches import *
@@ -10,7 +11,6 @@ from Libraries.bot_config import get_config
 cfg = get_config()
 
 bot = commands.Bot(command_prefix='?')
-TOKEN = cfg["DISCORD_TOKEN"]
 
 @bot.event
 async def on_ready():
@@ -67,10 +67,12 @@ async def challenge(ctx):
     recipient_id = ctx.message.mentions[0].id
     recipient_mention = ctx.message.mentions[0].mention
 
+    '''
     if challenger_id == recipient_id:
         await ctx.send("You can't challenge yourself! Usage:\n**!challenge @username**")
         return
-    
+    '''
+
     challenger_pk = get_player_key(cfg, challenger_id)
     recipient_pk = get_player_key(cfg, recipient_id)
 
@@ -80,22 +82,32 @@ async def challenge(ctx):
 **Recipient:** ID = {recipient_id}, Tag = {recipient_mention}, PK = {recipient_pk}"""
         )
 
+    '''
     if recipient_pk == False:
         reporter = "<@!507367765884272641>" # MCauthon
         await ctx.send(f"Could not find recipient on the system. {reporter} please fix.")
         return
+    '''
 
+    # Check for response
     def check(reaction, user):
-        return user == ctx.message.author and str(reaction.emoji) == "👍"
+        my_check = user == ctx.message.author and str(reaction.emoji) == "👍" and ctx.message.author.id == recipient_id
+        print(my_check)
+        return my_check
 
     try:
+        await bot.add_reaction(ctx.message, "👍")
         reaction = await bot.wait_for("reaction_add", timeout=86400, check = check) # 86400 = 24 hours
 
-    except:
-        await ctx.send(f"Hi {challenger_mention}, you challenged {recipient_mention}, but they chickened out.")
+    except asyncio.TimeoutError:
+        await ctx.send(f"Hi {challenger_mention}, you challenged {recipient_mention}, but they chickened out (did not accept in time).")
         return
     
-    print("Hello")
+    match_details = make_match(cfg, player1_pk=challenger_pk, player2_pk=recipient_pk)
+
+    add_match(cfg, match_details)
+
+    await ctx.send(f"**MATCH CREATED:** {challenger_mention} vs {recipient_mention} on {match_details['map_name']}")
 
     return
 
@@ -136,7 +148,7 @@ async def challenge(ctx):
         #print(payload.user_id)
         #print(message.author.name)
 '''
-bot.run(TOKEN)
+bot.run(cfg["DISCORD_TOKEN"])
 
 
 '''

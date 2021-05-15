@@ -26,6 +26,7 @@ def make_match(cfg, player1_pk, player2_pk, map_pk = None, token=None):
         "winner" : None,
         "tournament" : None,
         "map" : chosen_map["pk"],
+        "map_name" : chosen_map["name"],
         "username" : cfg["USERNAME"],
         "password" : cfg["PASSWORD"]
     }
