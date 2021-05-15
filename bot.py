@@ -13,6 +13,12 @@ cfg = get_config()
 bot = commands.Bot(command_prefix='?')
 reporter = "<@!507367765884272641>" # MCauthon
 
+unicode_emojis = {
+    "thumbs_up" : '\N{THUMBS UP SIGN}',
+    "thumbs_down" : '\N{THUMBS DOWN SIGN}',
+    "cancel" : '\N{CANCEL CHARACTER}'
+}
+
 @bot.event
 async def on_ready():
 	print(f'Bot connected as {bot.user}')
@@ -78,7 +84,7 @@ async def challenge(ctx):
 
     challenge_message = await ctx.send(
         f"""
-**{challenger_mention} is challenging {recipient_mention}!**
+**{challenger_nick} is challenging {recipient_nick}!**
 {recipient_nick} react with 
 👍 to accept the challenge
 🚫 to decline the challenge"""
@@ -91,13 +97,12 @@ async def challenge(ctx):
     # Check for response
     def check_accept_challenge(reaction, user): # User is the person who reacted
         my_check = (
-            user.id == recipient_id and 
-            str(reaction.emoji) in ["👍", "🚫"]
+            user.id == recipient_id and (str(reaction.emoji) in ['👍', '🚫'])
             )
         return my_check
 
     try:
-        await challenge_message.add_reaction("👍"); await challenge_message.add_reaction("🚫")
+        await challenge_message.add_reaction('👍'); await challenge_message.add_reaction('🚫')
         reaction = await bot.wait_for("reaction_add", timeout=86400, check = check_accept_challenge) # 86400 = 24 hours
 
     except asyncio.TimeoutError:
@@ -150,8 +155,6 @@ React to this message with:
     elif str(emoji_reaction) == "🚫": # Cancel
         update = False
 
-    print(type(update))
-
     if update == False:
         await ctx.send(f"Match between {challenger_nick} and {recipient_nick} on {match_details['map_name']} has been cancelled.")
         return
@@ -163,51 +166,3 @@ React to this message with:
         await ctx.send(f"**Error updating the match.** Tell {reporter} to fix this.")
 
 bot.run(cfg["DISCORD_TOKEN"])
-
-
-'''
-@bot.command(help="Accepts a challenge. Needs to be a reply to a challenge message.")
-async def accept(ctx):
-    content = str(ctx.message)
-    print(content)
-    
-    msg = await ctx.send("Hello")
-    await msg.add_reaction("\N{THUMBS UP SIGN}") 
-
-    #reaction = await bot.wait_for_reaction(emoji="👍", message=msg)
-    #reaction = await bot.wait_for_reaction(['\N{SMILE}', custom_emoji], msg1)
-    #await bot.say("You responded with {}".format(reaction.emoji))
-'''
-
-'''
-    @bot.event
-    async def on_reaction_add(reaction, user):
-        print(reaction.message.content)
-        if reaction.emoji == '👍':
-            await ctx.send("Hello")
-'''
-
-'''
-    @bot.event
-    async def on_raw_reaction_add(payload):
-        channel = bot.get_channel(payload.channel_id)
-        # skip DM messages
-        if isinstance(channel, discord.DMChannel):
-            return
-
-        message = await channel.fetch_message(payload.message_id)
-        guild = bot.get_guild(payload.guild_id)
-        user = guild.get_member(payload.user_id)
-        emoji = payload.emoji.name
-        reaction = discord.utils.get(message.reactions, emoji=emoji)
-
-        print(message.author.id)
-        if message.author.id != cfg["BOT_ID"]:
-            return
-        
-        print("Hello")
-
-        #print(f"{guild}\n{user}\n{emoji}\n{reaction}")
-        #print(payload.user_id)
-        #print(message.author.name)
-'''
