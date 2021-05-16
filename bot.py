@@ -13,10 +13,6 @@ cfg = get_config()
 bot = commands.Bot(command_prefix='?')
 reporter = "<@!507367765884272641>" # MCauthon
 
-@client.command()
-async def load(ctx):
-    pass
-
 @bot.event
 async def on_ready():
 	print(f'Bot connected as {bot.user}')
