@@ -7,8 +7,10 @@ name = "pypi"
 "discord.py" = "*"
 python-dotenv = "*"
 bs4 = "*"
+urllib3 = "*"
+requests = "*"
 
 [dev-packages]
 
 [requires]
-python_version = "3.8"
+python_version = "3.9"

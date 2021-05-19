@@ -13,7 +13,6 @@ cfg = get_config()
 bot = commands.Bot(command_prefix='?')
 reporter = "<@!507367765884272641>" # MCauthon
 
-
 @bot.event
 async def on_ready():
 	print(f'Bot connected as {bot.user}')
@@ -62,41 +61,52 @@ async def challenge(ctx):
         await ctx.send("Invalid Challenge. Usage:\n**?challenge @username**")
         return
 
-    challenger_id = ctx.message.author.id
-    challenger_nick = ctx.message.author.display_name
-    challenger_mention = ctx.message.author.mention
+    challenger = {}
+    challenger["base"] = ctx.message.author
+    challenger["id"] = challenger["base"].id
+    challenger["name"] = challenger["base"].display_name
+    challenger["mention"] = challenger["base"].mention
 
-    recipient_id = ctx.message.mentions[0].id
-    recipient_nick = ctx.message.mentions[0].display_name
-    recipient_mention = ctx.message.mentions[0].mention
+    recipient = {}
+    recipient["base"] = ctx.message.mentions[0]
+    recipient["id"] = recipient["base"].id
+    recipient["name"] = recipient["base"].display_name
+    recipient["mention"] = recipient["base"].mention    
+    
 
-    if challenger_id == recipient_id:
+    if challenger['id'] == recipient["id"]:
         await ctx.send("You can't challenge yourself! Usage:\n**!challenge @username**")
         return
 
-    challenger_pk = get_player_key(cfg, challenger_id)
-    recipient_pk = get_player_key(cfg, recipient_id)
+    challenger_pk = get_player_key(cfg, challenger['id'])
+    recipient_pk = get_player_key(cfg, recipient["id"])
 
     challenge_message = await ctx.send(
         f"""
-**{challenger_nick} is challenging {recipient_nick}!**
---- {recipient_nick} react with ---
-👍 to **accept**
-🚫 to **decline**
+    **{challenger['name']} is challenging {recipient['name']}!**
+    --- {recipient['name']} react with ---
+    👍 to **accept**
+    🚫 to **decline**
     """)
 
-    if recipient_pk == False:
+    invalid_player = None
+    if challenger_pk == False:
+        invalid_player = challenger
+    elif recipient_pk == False:
+        invalid_player = recipient
+
+    if invalid_player is not None:
         await ctx.send(f"""
-        Could not find recipient on the system. {reporter} please fix.
-        {recipient_nick} 
-        ID: {recipient_id}
+        Could not find {invalid_player["name"]}'s Discord ID on the system. Ask {reporter} if you need help. 
+        Most likely, {invalid_player["name"]} needs to go to https://www.honeybadgersc2mod.com/user_home/, register/log-in, and update their Discord ID, as below:
+        Discord ID: {invalid_player["id"]}
+        Server PK (for debugging): {invalid_player["pk"]}
         """)
-        return
 
     # Check for response
     def check_accept_challenge(reaction, user): # User is the person who reacted
         my_check = (
-            user.id == recipient_id and (str(reaction.emoji) in ['👍', '🚫'])
+            user.id == recipient["id"] and (str(reaction.emoji) in ['👍', '🚫'])
             )
         return my_check
 
@@ -105,7 +115,7 @@ async def challenge(ctx):
         reaction = await bot.wait_for("reaction_add", timeout=86400, check = check_accept_challenge) # 86400 = 24 hours
 
     except asyncio.TimeoutError:
-        await ctx.send(f"Hi {challenger_mention}, you challenged {recipient_mention}, but they chickened out (did not accept in time).")
+        await ctx.send(f"Hi {challenger['mention']}, you challenged {recipient['mention']}, but they chickened out (did not accept in time).")
         return
 
     emoji_reaction = reaction[0]
@@ -123,18 +133,18 @@ async def challenge(ctx):
     matchup_rate_p2 = (100 - matchup_rate_p1)
 
     match_message = await ctx.send(f"""
-**MATCH CREATED:** 
-{challenger_mention} [{matchup_rate_p1}%] vs {recipient_mention} [{matchup_rate_p2}%] on {match_details['map_name']}
---- React to this message with ---
-1️⃣ if **{challenger_nick}** won
-2️⃣ if **{recipient_nick}** won
-🚫 to cancel the match.
+    **MATCH CREATED:** 
+    {challenger['mention']} [{matchup_rate_p1}%] vs {recipient['mention']} [{matchup_rate_p2}%] on {match_details['map_name']}
+    --- React to this message with ---
+    1️⃣ if **{challenger['name']}** won
+    2️⃣ if **{recipient['name']}** won
+    🚫 to cancel the match.
     """)
 
     def check_match_winner(reaction, user):
         my_check = (
             str(reaction.emoji) in ["1️⃣", "2️⃣", "🚫"] and 
-            user.id in [recipient_id, challenger_id]
+            user.id in [recipient["id"], challenger['id']]
         )
         return my_check
 
@@ -143,17 +153,17 @@ async def challenge(ctx):
         reaction = await bot.wait_for("reaction_add", timeout=86400, check = check_match_winner) # 86400 = 24 hours
 
     except asyncio.TimeoutError:
-        await ctx.send(f"Hi {challenger_mention}, you challenged {recipient_mention}, but they chickened out (did not accept in time).")
+        await ctx.send(f"Hi {challenger['mention']}, you challenged {recipient['mention']}, but they chickened out (did not accept in time).")
         return
 
     emoji_reaction = reaction[0]
 
     if str(emoji_reaction) == "1️⃣": # Challenger
         update = update_result(cfg, match_pk, challenger_pk)
-        winner_name = challenger_nick
+        winner_name = challenger['name']
     elif str(emoji_reaction) == "2️⃣": # Recipient
         update = update_result(cfg, match_pk, recipient_pk)
-        winner_name = recipient_nick
+        winner_name = recipient['name']
     elif str(emoji_reaction) == "🚫": # Cancel
         update = False
 
@@ -161,14 +171,14 @@ async def challenge(ctx):
     if update == False: 
         update = delete_match(cfg, match_pk)
         if str(update) == "202":
-            await ctx.send(f"Match between {challenger_nick} and {recipient_nick} on {match_details['map_name']} has been cancelled.")
+            await ctx.send(f"Match between {challenger['name']} and {recipient['name']} on {match_details['map_name']} has been cancelled.")
             return
         else:
             await ctx.send(f"**Error updating the match.** Tell {reporter} to fix this.")
         return
 
     if str(update) == "202":
-        await ctx.send(f"Match between {challenger_nick} and {recipient_nick} has been updated. {winner_name} has won.")
+        await ctx.send(f"Match between {challenger['name']} and {recipient['name']} has been updated. {winner_name} has won.")
         return
     else:
         await ctx.send(f"**Error updating the match.** Tell {reporter} to fix this.")
