@@ -1,31 +1,27 @@
 import discord
 from discord.ext import commands
+import asyncio
 
 from Libraries.matches import *
 from Libraries.maps import *
+from Libraries.challenges import * 
 from Libraries.bot_config import get_config
-cfg = get_config()
+
 
 class ChallengeCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        
 
     @commands.command(help="Sends a challenge. If accepted, creates a match tracked on https://www.honeybadgersc2mod.com/")
     async def challenge(self, ctx):
-        content = str(ctx.message.content)
-        if len(content.split()) == 1 and "challenge" in content: # ?challenge
-            challenge_type = "open"
-            my_timeout = 86400
-        elif len(content.split()) == 2 and content.split()[1].isnumeric():
-            challenge_type = "timed"
-            my_timeout = int(content.split()[1])
-        elif (len(content.split()) == 2 and "<@" in content): # ?challenge @MCauthon
-            challenge_type = "direct"
-        else:
-            await ctx.send("Invalid Challenge. Usage:\n**?challenge, ?challenge [time in minutes], ?challenge @username**")
-            return
+        cfg = get_config()
 
-        print(f"Challenge type: {challenge_type}")
+        content = str(ctx.message.content)
+
+        challenge = await parse_challenge(ctx, content) # {type=<str type>, timeout=<int timeout>}
+        if not challenge:
+            return
 
         challenger = {}
         challenger["base"] = ctx.message.author
@@ -33,38 +29,27 @@ class ChallengeCog(commands.Cog):
         challenger["name"] = challenger["base"].display_name
         challenger["mention"] = challenger["base"].mention
 
+        recipient = None
+        if challenge["type"] == "direct":
+            recipient = {}
+            recipient["base"] = ctx.message.mentions[0]
+            recipient["id"] = recipient["base"].id
+            recipient["name"] = recipient["base"].display_name
+            recipient["mention"] = recipient["base"].mention 
 
-        # If timeout or open challenge, need to wait for recipient reaction
-        if challenge_type in ["open", "timed"]:
+        challenge_reaction = await challenge_message(ctx, self.bot, challenger, challenge["timeout"], challenge["type"], recipient)
 
-            challenge_message = await ctx.send(
-            f"""
-            **{challenger['name']} has created an open challenge!**
-            This challenge will expire in {my_timeout//60} minutes
-            --- React with ---
-            👍 to **accept**
-            """)
+        if challenge["type"] != "direct":
+            recipient = {}
+            recipient["base"] = challenge_reaction[1]
+            recipient["id"] = recipient["base"].id
+            recipient["name"] = recipient["base"].name
+            recipient["mention"] = recipient["base"].mention
 
-        recipient = {}
-        recipient["base"] = ctx.message.mentions[0]
-        recipient["id"] = recipient["base"].id
-        recipient["name"] = recipient["base"].display_name
-        recipient["mention"] = recipient["base"].mention    
-
-        if challenger['id'] == recipient["id"]:
-            await ctx.send("You can't challenge yourself! Usage:\n**!challenge @username**")
-            return
+        #print(f"challenger: {challenger['name']}\nrecipient: {recipient['name']}")
 
         challenger_pk = get_player_key(cfg, challenger['id'])
         recipient_pk = get_player_key(cfg, recipient["id"])
-
-        challenge_message = await ctx.send(
-            f"""
-        **{challenger['name']} is challenging {recipient['name']}!**
-        --- {recipient['name']} react with ---
-        👍 to **accept**
-        🚫 to **decline**
-        """)
 
         invalid_player = None
         if challenger_pk == False:
@@ -159,7 +144,6 @@ class ChallengeCog(commands.Cog):
             return
         else:
             await ctx.send(f"**Error updating the match.** Tell {reporter} to fix this.")
-
 
 def setup(bot):
     bot.add_cog(ChallengeCog(bot))
