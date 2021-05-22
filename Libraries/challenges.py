@@ -35,7 +35,7 @@ async def create_challenge_message(ctx, bot, challenger, timeout, challenge_type
 
         challenge_message = await ctx.send(f"""
         **{challenger['name']} has created an open challenge!**
-        This challenge will expire in {timeout//60} minutes <<looking_for_match>>
+        This challenge will expire in {timeout//60} minutes {looking_for_match}
         --- React with ---
         👍 to **accept**
         🚫 to **cancel** ({challenger['name']} only)
