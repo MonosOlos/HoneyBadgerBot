@@ -31,7 +31,7 @@ async def parse_challenge(ctx, content):
 async def challenge_message(ctx, bot, challenger, timeout, challenge_type, recipient=None):
 
     if challenge_type in ["open", "timed"]:
-        looking_for_match = "<@!802635905709768704>"
+        looking_for_match = "<@&802635905709768704>"
 
         challenge_message = await ctx.send(f"""
         **{challenger['name']} has created an open challenge!**
