@@ -10,7 +10,12 @@ from Libraries.matches import *
 from Libraries.bot_config import get_config
 cfg = get_config()
 
-bot = commands.Bot(command_prefix='?')
+testing = True
+if testing == True:
+    bot = commands.Bot(command_prefix='£')
+else:
+    bot = commands.Bot(command_prefix='?')
+
 reporter = "<@!507367765884272641>" # MCauthon
 
 @bot.event
@@ -57,9 +62,19 @@ async def mapdetails(ctx):
 @bot.command(help="Sends a challenge. If accepted, creates a match tracked on https://www.honeybadgersc2mod.com/")
 async def challenge(ctx):
     content = str(ctx.message.content)
-    if not (len(content.split()) == 2 and "<@" in content):
-        await ctx.send("Invalid Challenge. Usage:\n**?challenge @username**")
+    if len(content.split()) == 1 and "challenge" in content: # ?challenge
+        challenge_type = "open"
+        my_timeout = 86400
+    elif len(content.split()) == 2 and content.split()[1].isnumeric():
+        challenge_type = "timed"
+        my_timeout = int(content.split()[1])
+    elif (len(content.split()) == 2 and "<@" in content): # ?challenge @MCauthon
+        challenge_type = "direct"
+    else:
+        await ctx.send("Invalid Challenge. Usage:\n**?challenge, ?challenge [time in minutes], ?challenge @username**")
         return
+
+    print(f"Challenge type: {challenge_type}")
 
     challenger = {}
     challenger["base"] = ctx.message.author
@@ -67,12 +82,23 @@ async def challenge(ctx):
     challenger["name"] = challenger["base"].display_name
     challenger["mention"] = challenger["base"].mention
 
+
+    # If timeout or open challenge, need to wait for recipient reaction
+    if challenge_type in ["open", "timed"]:
+
+        challenge_message = await ctx.send(
+        f"""
+        **{challenger['name']} has created an open challenge!**
+        This challenge will expire in {my_timeout//60} minutes
+        --- React with ---
+        👍 to **accept**
+        """)
+
     recipient = {}
     recipient["base"] = ctx.message.mentions[0]
     recipient["id"] = recipient["base"].id
     recipient["name"] = recipient["base"].display_name
     recipient["mention"] = recipient["base"].mention    
-    
 
     if challenger['id'] == recipient["id"]:
         await ctx.send("You can't challenge yourself! Usage:\n**!challenge @username**")
@@ -150,7 +176,7 @@ async def challenge(ctx):
 
     try:
         await match_message.add_reaction("1️⃣"); await match_message.add_reaction("2️⃣"); await match_message.add_reaction("🚫")
-        reaction = await bot.wait_for("reaction_add", timeout=86400, check = check_match_winner) # 86400 = 24 hours
+        reaction = await bot.wait_for("reaction_add", timeout=my_timeout, check = check_match_winner) # 86400 = 24 hours
 
     except asyncio.TimeoutError:
         await ctx.send(f"Hi {challenger['mention']}, you challenged {recipient['mention']}, but they chickened out (did not accept in time).")
@@ -182,5 +208,6 @@ async def challenge(ctx):
         return
     else:
         await ctx.send(f"**Error updating the match.** Tell {reporter} to fix this.")
+
 
 bot.run(cfg["DISCORD_TOKEN"])
