@@ -31,10 +31,11 @@ async def parse_challenge(ctx, content):
 async def challenge_message(ctx, bot, challenger, timeout, challenge_type, recipient=None):
 
     if challenge_type in ["open", "timed"]:
+        looking_for_match = "<@!802635905709768704>"
 
         challenge_message = await ctx.send(f"""
         **{challenger['name']} has created an open challenge!**
-        This challenge will expire in {timeout//60} minutes
+        This challenge will expire in {timeout//60} minutes {looking_for_match}
         --- React with ---
         👍 to **accept**
         """)
@@ -71,3 +72,4 @@ async def challenge_message(ctx, bot, challenger, timeout, challenge_type, recip
         await ctx.send(f"Hi {challenger['mention']}, you challenged {recipient['mention']}, but they chickened out (did not accept in time).")
             
     return reaction
+
