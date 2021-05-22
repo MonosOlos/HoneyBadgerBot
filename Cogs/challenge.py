@@ -41,14 +41,30 @@ class ChallengeCog(commands.Cog):
         challenge_reaction = challenge_details["reaction"]
         challenge_message = challenge_details["message"]
 
-        if challenge["type"] != "direct":
+        if challenge["type"] in ["open", "timed"]:
             recipient = {}
             recipient["base"] = challenge_reaction[1]
             recipient["id"] = recipient["base"].id
             recipient["name"] = recipient["base"].name
             recipient["mention"] = recipient["base"].mention
 
-        #print(f"challenger: {challenger['name']}\nrecipient: {recipient['name']}")
+        print(f"""
+        challenger: {challenger['name']}, {challenger["id"]}
+        recipient: {recipient['name']}, {recipient["id"]}
+        challenge_type={challenge['type']}
+        """)
+
+        print(str(challenge_reaction))
+        print(str(challenge_message))
+
+        if str(challenge_reaction[0].emoji) == '🚫' and challenge_reaction[1].id == challenger["id"]:
+            await ctx.send(f"Challenge cancelled by {challenger['name']}")
+            return
+
+        # TODO: How do I stick this in a function???
+        if challenger["id"] == recipient["id"]:
+            await ctx.send("You can't challenge yourself!")
+            return
 
         challenger["pk"] = get_player_key(cfg, challenger['id'])
         recipient["pk"] = get_player_key(cfg, recipient["id"])
@@ -66,21 +82,6 @@ class ChallengeCog(commands.Cog):
             Discord ID: {invalid_player["id"]}
             Server PK (for debugging): {invalid_player["pk"]}
             """)
-
-        # # Check for response
-        # def check_accept_challenge(reaction, user): # User is the person who reacted
-        #     my_check = (
-        #         user.id == recipient["id"] and (str(reaction.emoji) in ['👍', '🚫'])
-        #         )
-        #     return my_check
-
-        # try:
-        #     await challenge_message.add_reaction('👍'); await challenge_message.add_reaction('🚫')
-        #     reaction = await bot.wait_for("reaction_add", timeout=86400, check = check_accept_challenge) # 86400 = 24 hours
-
-        # except asyncio.TimeoutError:
-        #     await ctx.send(f"Hi {challenger['mention']}, you challenged {recipient['mention']}, but they chickened out (did not accept in time).")
-        #     return
 
         if str(challenge_reaction) == "🚫":
             await ctx.send("Match declined.")

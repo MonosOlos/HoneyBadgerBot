@@ -58,7 +58,8 @@ async def create_challenge_message(ctx, bot, challenger, timeout, challenge_type
 
         if challenge_type in ["open", "timed"]:
             my_check = (
-                user.id != challenger["id"] and (str(reaction.emoji) in ['👍', '🚫']) # So that user can't accept own challenge
+                (user.id != challenger["id"] and str(reaction.emoji) == '👍' and user != bot.user) or # So that user can't accept own challenge
+                (user.id == challenger["id"] and str(reaction.emoji) == '🚫')
                 )
         if challenge_type == "direct":
             my_check = (
@@ -69,9 +70,13 @@ async def create_challenge_message(ctx, bot, challenger, timeout, challenge_type
     try:
         await challenge_message.add_reaction('👍'); await challenge_message.add_reaction('🚫')
         reaction = await bot.wait_for("reaction_add", timeout=timeout, check = check_accept_challenge) # 86400 = 24 hours
+
     except asyncio.TimeoutError:
-        await ctx.send(f"Hi {challenger['mention']}, you challenged {recipient['mention']}, but they chickened out (did not accept in time).")
-            
+        if recipient == None:
+            await ctx.send(f"Challenge by {challenger['mention']} has expired.")
+        else:
+            await ctx.send(f"Hi {challenger['mention']}, you challenged {recipient['mention']}, but they chickened out (did not accept in time).")
+    
     return {
         "message" : challenge_message,
         "reaction": reaction
