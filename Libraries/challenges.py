@@ -28,16 +28,17 @@ async def parse_challenge(ctx, content):
     return challenge
 
 
-async def challenge_message(ctx, bot, challenger, timeout, challenge_type, recipient=None):
+async def create_challenge_message(ctx, bot, challenger, timeout, challenge_type, recipient=None):
 
     if challenge_type in ["open", "timed"]:
         looking_for_match = "<@&802635905709768704>"
 
         challenge_message = await ctx.send(f"""
         **{challenger['name']} has created an open challenge!**
-        This challenge will expire in {timeout//60} minutes {looking_for_match}
+        This challenge will expire in {timeout//60} minutes <<looking_for_match>>
         --- React with ---
         👍 to **accept**
+        🚫 to **cancel** ({challenger['name']} only)
         """)
 
     if challenge_type == "direct":
@@ -67,9 +68,12 @@ async def challenge_message(ctx, bot, challenger, timeout, challenge_type, recip
 
     try:
         await challenge_message.add_reaction('👍'); await challenge_message.add_reaction('🚫')
-        reaction = await bot.wait_for("reaction_add", timeout=86400, check = check_accept_challenge) # 86400 = 24 hours
+        reaction = await bot.wait_for("reaction_add", timeout=timeout, check = check_accept_challenge) # 86400 = 24 hours
     except asyncio.TimeoutError:
         await ctx.send(f"Hi {challenger['mention']}, you challenged {recipient['mention']}, but they chickened out (did not accept in time).")
             
-    return reaction
+    return {
+        "message" : challenge_message,
+        "reaction": reaction
+    }
 

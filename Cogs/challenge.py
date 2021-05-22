@@ -37,7 +37,9 @@ class ChallengeCog(commands.Cog):
             recipient["name"] = recipient["base"].display_name
             recipient["mention"] = recipient["base"].mention 
 
-        challenge_reaction = await challenge_message(ctx, self.bot, challenger, challenge["timeout"], challenge["type"], recipient)
+        challenge_details = await create_challenge_message(ctx, self.bot, challenger, challenge["timeout"], challenge["type"], recipient)
+        challenge_reaction = challenge_details["reaction"]
+        challenge_message = challenge_details["message"]
 
         if challenge["type"] != "direct":
             recipient = {}
@@ -48,50 +50,49 @@ class ChallengeCog(commands.Cog):
 
         #print(f"challenger: {challenger['name']}\nrecipient: {recipient['name']}")
 
-        challenger_pk = get_player_key(cfg, challenger['id'])
-        recipient_pk = get_player_key(cfg, recipient["id"])
+        challenger["pk"] = get_player_key(cfg, challenger['id'])
+        recipient["pk"] = get_player_key(cfg, recipient["id"])
 
         invalid_player = None
-        if challenger_pk == False:
+        if challenger["pk"] == False:
             invalid_player = challenger
-        elif recipient_pk == False:
+        elif recipient["pk"] == False:
             invalid_player = recipient
 
         if invalid_player is not None:
             await ctx.send(f"""
-            Could not find {invalid_player["name"]}'s Discord ID on the system. Ask {reporter} if you need help. 
+            Could not find {invalid_player["name"]}'s Discord ID on the system. Ask MCauthon if you need help. 
             Most likely, {invalid_player["name"]} needs to go to https://www.honeybadgersc2mod.com/user_home/, register/log-in, and update their Discord ID, as below:
             Discord ID: {invalid_player["id"]}
             Server PK (for debugging): {invalid_player["pk"]}
             """)
 
-        # Check for response
-        def check_accept_challenge(reaction, user): # User is the person who reacted
-            my_check = (
-                user.id == recipient["id"] and (str(reaction.emoji) in ['👍', '🚫'])
-                )
-            return my_check
+        # # Check for response
+        # def check_accept_challenge(reaction, user): # User is the person who reacted
+        #     my_check = (
+        #         user.id == recipient["id"] and (str(reaction.emoji) in ['👍', '🚫'])
+        #         )
+        #     return my_check
 
-        try:
-            await challenge_message.add_reaction('👍'); await challenge_message.add_reaction('🚫')
-            reaction = await bot.wait_for("reaction_add", timeout=86400, check = check_accept_challenge) # 86400 = 24 hours
+        # try:
+        #     await challenge_message.add_reaction('👍'); await challenge_message.add_reaction('🚫')
+        #     reaction = await bot.wait_for("reaction_add", timeout=86400, check = check_accept_challenge) # 86400 = 24 hours
 
-        except asyncio.TimeoutError:
-            await ctx.send(f"Hi {challenger['mention']}, you challenged {recipient['mention']}, but they chickened out (did not accept in time).")
-            return
+        # except asyncio.TimeoutError:
+        #     await ctx.send(f"Hi {challenger['mention']}, you challenged {recipient['mention']}, but they chickened out (did not accept in time).")
+        #     return
 
-        emoji_reaction = reaction[0]
-        if str(emoji_reaction) == "🚫":
+        if str(challenge_reaction) == "🚫":
             await ctx.send("Match declined.")
             return
         # Making the match and checking for winner
 
-        match_details = make_match(cfg, player1_pk=challenger_pk, player2_pk=recipient_pk) # Returns dict with match details
+        match_details = make_match(cfg, player1_pk=challenger["pk"], player2_pk=recipient["pk"]) # Returns dict with match details
 
         match_response = add_match(cfg, match_details) # Adds the match to the system
         match_pk = match_response["pk"]
 
-        matchup_rate_p1 = round(get_matchup_rate(cfg, challenger_pk, recipient_pk).json()["expected_score_challenger"] * 100)
+        matchup_rate_p1 = round(get_matchup_rate(cfg, challenger["pk"], recipient["pk"]).json()["expected_score_challenger"] * 100)
         matchup_rate_p2 = (100 - matchup_rate_p1)
 
         match_message = await ctx.send(f"""
@@ -112,7 +113,7 @@ class ChallengeCog(commands.Cog):
 
         try:
             await match_message.add_reaction("1️⃣"); await match_message.add_reaction("2️⃣"); await match_message.add_reaction("🚫")
-            reaction = await bot.wait_for("reaction_add", timeout=my_timeout, check = check_match_winner) # 86400 = 24 hours
+            reaction = await self.bot.wait_for("reaction_add", timeout=86400, check = check_match_winner) # 86400 = 24 hours
 
         except asyncio.TimeoutError:
             await ctx.send(f"Hi {challenger['mention']}, you challenged {recipient['mention']}, but they chickened out (did not accept in time).")
@@ -121,10 +122,10 @@ class ChallengeCog(commands.Cog):
         emoji_reaction = reaction[0]
 
         if str(emoji_reaction) == "1️⃣": # Challenger
-            update = update_result(cfg, match_pk, challenger_pk)
+            update = update_result(cfg, match_pk, challenger["pk"])
             winner_name = challenger['name']
         elif str(emoji_reaction) == "2️⃣": # Recipient
-            update = update_result(cfg, match_pk, recipient_pk)
+            update = update_result(cfg, match_pk, recipient["pk"])
             winner_name = recipient['name']
         elif str(emoji_reaction) == "🚫": # Cancel
             update = False

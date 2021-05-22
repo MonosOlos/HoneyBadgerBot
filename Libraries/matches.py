@@ -112,7 +112,6 @@ def get_matchup_rate(cfg, player1_pk, player2_pk, token=None):
         token = get_login_token(cfg)
 
     win_probability_url = f'{cfg["BASE_URL"]}{cfg["PLAYER_WIN_PROBABILITY_REST"]}{player1_pk}/{player2_pk}'
-    print(win_probability_url)
 
     win_probability_response = requests.get(
         win_probability_url,
@@ -130,7 +129,6 @@ def get_player_key(cfg, discord_id):
     url = cfg["BASE_URL"] + cfg["DISCORD_LOOKUP_REST"] + str(discord_id) + "/"
     player_data = requests.get(url, verify=False).json()
     if type(player_data) != dict:
-        print(player_data.status_code)
         return False
     player_key = player_data["pk"]
     return player_key
