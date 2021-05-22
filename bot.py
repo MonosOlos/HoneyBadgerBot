@@ -209,5 +209,7 @@ async def challenge(ctx):
     else:
         await ctx.send(f"**Error updating the match.** Tell {reporter} to fix this.")
 
+    print("hello")
+
 
 bot.run(cfg["DISCORD_TOKEN"])
