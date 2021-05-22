@@ -9,6 +9,7 @@ python-dotenv = "*"
 bs4 = "*"
 urllib3 = "*"
 requests = "*"
+async-timeout = "*"
 
 [dev-packages]
 

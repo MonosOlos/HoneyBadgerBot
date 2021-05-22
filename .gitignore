@@ -1,0 +1,7 @@
+# Ignore Testing Folder
+Testing
+
+# Ignore .vscode
+**/.vscode/
+
+
