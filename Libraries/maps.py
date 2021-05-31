@@ -76,7 +76,7 @@ def liquipedia_get_page(search_title):
     
     map_details = {
         "pageid" : raw_details["pageid"],
-        "page url": base_api_url, # TODO: Fix
+        "page url": liquipedia_get_page_url(raw_details["pageid"]),
         "title" : raw_details["title"],
         "size" : check_match(r"Size: (.+?) \w+"),
         "rush distance" : check_match(r"Rush distance: (.+?\d)\s"),
