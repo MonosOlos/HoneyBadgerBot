@@ -38,6 +38,7 @@ def get_map_names(cfg, lower=False):
     return map_names
 
 
+# What does this do?
 def get_map_details(cfg, map_name):
     maps = get_maps(cfg)
 
@@ -46,7 +47,7 @@ def get_map_details(cfg, map_name):
             return map
 
 
-def fetch_image_link(map_name):
+def fetch_map_details(map_name):
 
     base_api_url = "https://liquipedia.net/starcraft2/api.php?"
 
