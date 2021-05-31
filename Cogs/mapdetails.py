@@ -22,7 +22,7 @@ class MapDetails(commands.Cog):
         output_string = ""
         for item in map_details:
             if map_details[item] != None:
-                output_string += f'{item}: {map_details[item]}, \n'
+                output_string += f'**{item}**: {map_details[item]}, \n'
 
         await ctx.send(output_string)
         await ctx.send(map_image_url)
