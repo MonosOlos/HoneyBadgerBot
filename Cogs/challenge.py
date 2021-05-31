@@ -11,7 +11,6 @@ from Libraries.bot_config import get_config
 class ChallengeCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        
 
     @commands.command(help="Sends a challenge. If accepted, creates a match tracked on https://www.honeybadgersc2mod.com/")
     async def challenge(self, ctx):
