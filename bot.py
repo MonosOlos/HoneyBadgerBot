@@ -14,7 +14,7 @@ cfg = get_config()
 intents = discord.Intents.default()
 intents.members = True
 
-command_prefix = "?" 
+command_prefix = "£" 
 bot = commands.Bot(command_prefix=command_prefix, intents=intents)
 
 reporter = "<@!507367765884272641>" # MCauthon

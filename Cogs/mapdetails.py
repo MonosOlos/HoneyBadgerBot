@@ -12,21 +12,24 @@ class MapDetails(commands.Cog):
 
     @commands.command(help="Gives details for a map, including size and image")
     async def mapdetails(self, ctx):
-        map_name = str(ctx.message.content.split(' ', 1)[1])
+        map_name = str(ctx.message.content.split(' ', 1)[1]).title()
+        
+        map_details = liquipedia_get_page(map_name)
+        map_image_url = liquipedia_get_image_url(map_details)
 
-        map_names = get_map_names(cfg, lower=True)
-        if map_name.lower() not in map_names:
-            print("not in list")
-            await ctx.send(f"Available maps:\n{map_names}")
-            return
+        del map_details["pageid"]
 
-        map_details = get_map_details(cfg, map_name)
+        output_string = ""
+        for item in map_details:
+            if map_details[item] != None:
+                output_string += f'**{item}**: {map_details[item]}, \n'
 
-        map_name = map_details["name"]
-        #map_location = map_details["image_location"] # TODO: Add location and size to API
-        #map_size = map_details["size"]
+        await ctx.send(output_string)
+        await ctx.send(map_image_url)
 
-        await ctx.send(map_name)
+        return
+
+# https://liquipedia.net/starcraft2/api.php?action=query&prop=info&pageids=48483&inprop=url
 
 def setup(bot:commands.Bot):
     bot.add_cog(MapDetails(bot))
