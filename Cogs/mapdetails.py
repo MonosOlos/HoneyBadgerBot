@@ -15,6 +15,10 @@ class MapDetails(commands.Cog):
         map_name = str(ctx.message.content.split(' ', 1)[1]).title()
         
         map_details = liquipedia_get_page(map_name)
+        if map_details == None:
+            await ctx.send(f'Could not find a map for "{map_name}", please check spelling.')
+            return
+        
         map_image_url = liquipedia_get_image_url(map_details)
 
         del map_details["pageid"]
