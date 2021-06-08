@@ -138,10 +138,6 @@ def liquipedia_get_image_url(map_details):
 def liquipedia_get_page_url(page_id):
     base_api_url = "https://liquipedia.net/starcraft2/api.php?"
 
-    # https://liquipedia.net/starcraft2/api.php?action=query&prop=info&pageids=48483&inprop=url
-
-    page_id = "48483"
-
     params = {
         "action": "query",
         "format": "json",
@@ -153,5 +149,7 @@ def liquipedia_get_page_url(page_id):
     response = requests.get(url=base_api_url, params=params)
     data = response.json()
 
-    url = data["query"]["pages"][page_id]["fullurl"]
+    print(response.url)
+
+    url = data["query"]["pages"][str(page_id)]["fullurl"]
     return url

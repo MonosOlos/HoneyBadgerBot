@@ -37,31 +37,22 @@ class ChallengeCog(commands.Cog):
             recipient["mention"] = recipient["base"].mention 
 
         challenge_details = await create_challenge_message(ctx, self.bot, challenger, challenge["timeout"], challenge["type"], recipient)
-        challenge_reaction = challenge_details["reaction"]
-        challenge_message = challenge_details["message"]
+        # challenge_details[reaction].emoji
+        # challenge_details[message]
 
         if challenge["type"] in ["open", "timed"]:
             recipient = {}
-            recipient["base"] = challenge_reaction[1]
+            recipient["base"] = challenge_details["reaction"][1]
             recipient["id"] = recipient["base"].id
-            recipient["name"] = recipient["base"].name
+            recipient["name"] = recipient["base"].display_name
             recipient["mention"] = recipient["base"].mention
 
-        print(f"""
-        challenger: {challenger['name']}, {challenger["id"]}
-        recipient: {recipient['name']}, {recipient["id"]}
-        challenge_type={challenge['type']}
-        """)
-
-        print(str(challenge_reaction))
-        print(str(challenge_message))
-
-        if str(challenge_reaction[0].emoji) == '🚫' and challenge_reaction[1].id == challenger["id"]:
+        if str(challenge_details["reaction"][0].emoji) == '🚫' and challenge_details["reaction"][1].id == challenger["id"]: # Allow challenge to be cancelled by the same person.
             await ctx.send(f"Challenge cancelled by {challenger['name']}")
             return
 
         # TODO: How do I stick this in a function???
-        if challenger["id"] == recipient["id"]:
+        if challenger["id"] == recipient["id"]: # Deny challenging yourself.
             await ctx.send("You can't challenge yourself!")
             return
 
@@ -82,7 +73,7 @@ class ChallengeCog(commands.Cog):
             Server PK (for debugging): {invalid_player["pk"]}
             """)
 
-        if str(challenge_reaction) == "🚫":
+        if str(challenge_details["reaction"]) == "🚫":
             await ctx.send("Match declined.")
             return
         # Making the match and checking for winner
