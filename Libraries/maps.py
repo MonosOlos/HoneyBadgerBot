@@ -42,7 +42,7 @@ def get_map_names(cfg, lower=False):
 
 def liquipedia_get_page(search_title):
 
-    search_name = search_title
+    search_name = search_title.lower()
 
     base_api_url = "https://liquipedia.net/starcraft2/api.php?"
 
@@ -54,12 +54,13 @@ def liquipedia_get_page(search_title):
     }
 
     response = requests.get(url=base_api_url, params=params)
+    print(response.url)
     data = response.json()
 
     raw_details = None
     results = data["query"]["search"]
     for result in results:
-        if search_name in result["title"]:
+        if search_name in result["title"].lower():
             raw_details = result
             break
     

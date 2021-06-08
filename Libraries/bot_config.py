@@ -1,5 +1,9 @@
 def get_config():
     return {
+        
+    # Command Prefix
+    "COMMAND_PREFIX": "£",
+
     # Discord IDs
     "DISCORD_TOKEN" : "ODM4Njk5MTYxNjYyNTIxMzU1.YI-5dg.A-_HKb_M8jd1uo7C1d6xivIQx2g",
     "DISCORD_GUILD" : "782883351723769888",
