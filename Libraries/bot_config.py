@@ -5,7 +5,7 @@ def get_config():
     "COMMAND_PREFIX": "!",
 
     # Discord IDs
-    "DISCORD_TOKEN" : "ODM4Njk5MTYxNjYyNTIxMzU1.YI-5dg.A-_HKb_M8jd1uo7C1d6xivIQx2g",
+    "DISCORD_TOKEN" : "",
     "DISCORD_GUILD" : "782883351723769888",
     "BOT_ID" : "838699161662521355",
 
