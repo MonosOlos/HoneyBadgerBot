@@ -11,7 +11,7 @@ def get_config():
 
     # Login Details
     "USERNAME" : "MCauthon",
-    "PASSWORD" : "honeybadger",
+    "PASSWORD" : "********",
 
     # API Endpoints
     "BASE_URL" : "https://www.honeybadgersc2mod.com/",
