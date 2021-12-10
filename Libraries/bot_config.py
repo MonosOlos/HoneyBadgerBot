@@ -10,8 +10,8 @@ def get_config():
     "BOT_ID" : "838699161662521355",
 
     # Login Details
-    "USERNAME" : "MCauthon",
-    "PASSWORD" : "********",
+    "USERNAME" : "",
+    "PASSWORD" : ""
 
     # API Endpoints
     "BASE_URL" : "https://www.honeybadgersc2mod.com/",
